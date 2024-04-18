@@ -49,6 +49,7 @@ void BSP_LCD_Init(void)
 {
 	LCD_Pin_Init();
 	SPI_Init();
+	LCD_SPI_Enable();
 	LCD_Reset();
 	LCD_Config();
 
@@ -141,6 +142,7 @@ void LCD_Write_Cmd(uint8_t cmd) {
 	// send command over SPI
 	while(!REG_READ_BIT(pSpi->SR, SPI_SR_TXE_Pos));
 	REG_WRITE(pSpi->DR, cmd);
+	while(!REG_READ_BIT(pSpi->SR, SPI_SR_TXE_Pos));
 	while(REG_READ_BIT(pSpi->SR, SPI_SR_BSY_Pos));
 	LCD_CSX_HIGH();
 	LCD_DCX_HIGH();
@@ -155,8 +157,9 @@ void LCD_Write_Data(uint8_t *buffer, uint32_t len) {
 		// send command over SPI
 		while (!REG_READ_BIT(pSpi->SR, SPI_SR_TXE_Pos));
 		REG_WRITE(pSpi->DR, buffer[i]);
-		while(REG_READ_BIT(pSpi->SR, SPI_SR_BSY_Pos));
 	}
+	while(!REG_READ_BIT(pSpi->SR, SPI_SR_TXE_Pos));
+	while(REG_READ_BIT(pSpi->SR, SPI_SR_BSY_Pos));
 	LCD_CSX_HIGH();
 
 }
