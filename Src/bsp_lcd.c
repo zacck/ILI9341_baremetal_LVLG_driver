@@ -5,8 +5,7 @@
  *      Author: zaccko
  */
 
-#include "stm32f407xx.h"
-#include "reg_util.h"
+#include "bsp_lcd.h"
 
 void LCD_Pin_Init(void);
 void SPI_Init(void);
@@ -33,13 +32,17 @@ void LCD_Write_Data(uint8_t *buffer, uint32_t len);
 
 
 //reset macros
-#define LCD_RESX_HIGH		REG_SET_BIT(LCD_RESX_PORT->ODR, LCD_RESX_PIN)
-#define LCD_RESX_LOW		REG_CLR_BIT(LCD_RESX_PORT->ODR, LCD_RESX_PIN)
+#define LCD_RESX_HIGH()		REG_SET_BIT(LCD_RESX_PORT->ODR, LCD_RESX_PIN)
+#define LCD_RESX_LOW()		REG_CLR_BIT(LCD_RESX_PORT->ODR, LCD_RESX_PIN)
 
+
+//CS Macros
+#define LCD_CSX_HIGH()		REG_SET_BIT(LCD_CSX_PORT->ODR, LCD_CSX_PIN)
+#define LCD_CSX_LOW()			REG_CLR_BIT(LCD_CSX_PORT->ODR, LCD_CSX_PIN)
 
 //D/C Macros
-#define LCD_CSX_HIGH		REG_SET_BIT(LCD_CSX_PORT->ODR, LCD_CSX_PIN)
-#define LCD_CSX_LOW			REG_CLR_BIT(LCD_CSX_PORT->ODR, LCD_CSX_PIN)
+#define LCD_DCX_HIGH()		REG_SET_BIT(LCD_DCX_PORT->ODR, LCD_DCX_PIN)
+#define LCD_DCX_LOW()			REG_CLR_BIT(LCD_DCX_PORT->ODR, LCD_DCX_PIN)
 
 
 void BSP_LCD_Init(void)
@@ -132,21 +135,39 @@ void LCD_Config(void){
 
 void LCD_Write_Cmd(uint8_t cmd) {
 	SPI_TypeDef *pSpi = SPI_PORT;
+	//asert command
+	LCD_CSX_LOW();
+	LCD_DCX_LOW(); //for command
 	// send command over SPI
 	while(!REG_READ_BIT(pSpi->SR, SPI_SR_TXE_Pos));
 	REG_WRITE(pSpi->DR, cmd);
+	while(REG_READ_BIT(pSpi->SR, SPI_SR_BSY_Pos));
+	LCD_CSX_HIGH();
+	LCD_DCX_HIGH();
 
 }
 
 
 void LCD_Write_Data(uint8_t *buffer, uint32_t len) {
 	SPI_TypeDef *pSpi = SPI_PORT;
-	while (len--) {
+	LCD_CSX_LOW();
+	for(uint32_t i = 0; i < len; i++) {
 		// send command over SPI
 		while (!REG_READ_BIT(pSpi->SR, SPI_SR_TXE_Pos));
-		REG_WRITE(pSpi->DR, &buffer);
-		&buffer++;
+		REG_WRITE(pSpi->DR, buffer[i]);
+		while(REG_READ_BIT(pSpi->SR, SPI_SR_BSY_Pos));
 	}
+	LCD_CSX_HIGH();
 
 }
+
+void LCD_Reset(void ){
+	LCD_RESX_LOW();
+	for(uint32_t i = 0; i < (0xFFFF * 20U); i++);
+	LCD_RESX_HIGH();
+	for(uint32_t i = 0; i < (0xFFFF * 20U); i++);
+
+}
+
+
 
