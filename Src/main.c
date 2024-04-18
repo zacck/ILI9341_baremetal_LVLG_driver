@@ -19,6 +19,7 @@
 #include <stdint.h>
 #include "stm32f407xx.h"
 #include "reg_util.h"
+#include "bsp_lcd.h"
 
 void SystemClockSetup(void);
 
@@ -26,6 +27,7 @@ void SystemClockSetup(void);
 int main(void)
 {
 	SystemClockSetup();
+	BSP_LCD_Init();
     /* Loop forever */
 	for(;;);
 }
