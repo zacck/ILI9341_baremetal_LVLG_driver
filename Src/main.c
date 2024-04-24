@@ -21,6 +21,18 @@
 #include "reg_util.h"
 #include "bsp_lcd.h"
 
+#define RGB888(r,g,b)  (((r) << 16) | ((g) << 8) | (b))
+
+#define VIOLET   	RGB888(148,0,211)
+#define INDIGO   	RGB888(75,0,130)
+#define BLUE   		RGB888(0,0,255)
+#define GREEN   	RGB888(0,255,0)
+#define YELLOW   	RGB888(255,255,0)
+#define ORANGE   	RGB888(255,127,0)
+#define RED   		RGB888(255,0,0)
+#define WHITE   	RGB888(255,255,255)
+#define BLACK		RGB888(0,0,0)
+
 void SystemClockSetup(void);
 
 
@@ -28,6 +40,7 @@ int main(void)
 {
 	SystemClockSetup();
 	bsp_lcd_init();
+	bsp_lcd_set_background_color(BLUE);
     /* Loop forever */
 	for(;;);
 }
