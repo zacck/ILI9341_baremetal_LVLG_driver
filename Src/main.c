@@ -36,11 +36,27 @@
 void SystemClockSetup(void);
 
 
+static void delay_50ms(void){
+	for(uint32_t i = 0 ; i<(0xFFFFU * 10U);i++);
+}
+
+
 int main(void)
 {
 	SystemClockSetup();
 	bsp_lcd_init();
-	bsp_lcd_set_background_color(BLUE);
+	bsp_lcd_set_background_color(WHITE);
+	delay_50ms();
+	delay_50ms();
+	bsp_lcd_fill_rect(VIOLET, 0, 240, 0, 52);
+	bsp_lcd_fill_rect(INDIGO, 0, 240, 53, 52);
+	bsp_lcd_fill_rect(BLUE, 0, 240, 105, 52);
+	bsp_lcd_fill_rect(GREEN, 0, 240, 158, 52);
+	bsp_lcd_fill_rect(YELLOW, 0, 240, 211, 52);
+	bsp_lcd_fill_rect(ORANGE, 0, 240, 264, 52);
+	bsp_lcd_fill_rect(RED, 0, 240, 316, 50);
+
+
     /* Loop forever */
 	for(;;);
 }
