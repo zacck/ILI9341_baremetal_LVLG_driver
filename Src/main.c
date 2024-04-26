@@ -45,16 +45,25 @@ int main(void)
 {
 	SystemClockSetup();
 	bsp_lcd_init();
+	bsp_lcd_set_orientation(LANDSCAPE);
 	bsp_lcd_set_background_color(WHITE);
 	delay_50ms();
 	delay_50ms();
-	bsp_lcd_fill_rect(VIOLET, 0, 240, 0, 52);
-	bsp_lcd_fill_rect(INDIGO, 0, 240, 53, 52);
-	bsp_lcd_fill_rect(BLUE, 0, 240, 105, 52);
-	bsp_lcd_fill_rect(GREEN, 0, 240, 158, 52);
-	bsp_lcd_fill_rect(YELLOW, 0, 240, 211, 52);
-	bsp_lcd_fill_rect(ORANGE, 0, 240, 264, 52);
-	bsp_lcd_fill_rect(RED, 0, 240, 316, 50);
+	bsp_lcd_fill_rect(VIOLET, 0, 320, 0, 34);
+	bsp_lcd_fill_rect(INDIGO, 0, 320, (34 *1), 34);
+	bsp_lcd_fill_rect(BLUE, 0, 320, (34*2), 34);
+	bsp_lcd_fill_rect(GREEN, 0, 320, (34*3), 34);
+	bsp_lcd_fill_rect(YELLOW, 0, 320, (34*4), 34);
+	bsp_lcd_fill_rect(ORANGE, 0, 320, (34*5), 34);
+	bsp_lcd_fill_rect(RED, 0, 320, (34*6), 34);
+	delay_50ms();
+	delay_50ms();
+	//ADD windowinng
+	bsp_lcd_set_background_color(YELLOW);
+	bsp_lcd_fill_rect(RED, 60, 200, 40, 160);
+
+
+
 
 
     /* Loop forever */
