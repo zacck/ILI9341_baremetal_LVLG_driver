@@ -61,6 +61,19 @@ int main(void)
 	//ADD windowinng
 	bsp_lcd_set_background_color(YELLOW);
 	bsp_lcd_fill_rect(RED, 60, 200, 40, 160);
+	delay_50ms();
+	delay_50ms();
+
+	// ADD smart windowing
+	bsp_lcd_set_background_color(YELLOW);
+	bsp_lcd_set_display_area(60,  259, 100, 139);
+	bsp_lcd_send_cmd_mem_write();
+	//make a small display buffer
+	uint16_t data[200UL * 40UL];
+	for(uint32_t i = 0; i < (200UL * 40UL); i++){
+		data[i] = bsp_lcd_convert_rgb888_to_rgb565(RED);
+	}
+	bsp_lcd_write((uint8_t*)data, (200UL * 40UL));
 
 
 
