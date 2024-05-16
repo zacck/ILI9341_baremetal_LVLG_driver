@@ -8,8 +8,8 @@
 #ifndef BSP_LCD_H_
 #define BSP_LCD_H_
 
-#include "arm_cm4.h"
 #include "stm32f407xx.h"
+#include "arm_cm4.h"
 #include "reg_util.h"
 #include "ili9341_reg.h"
 #include "board.h"

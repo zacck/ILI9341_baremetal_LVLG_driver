@@ -904,6 +904,8 @@ typedef struct
   uint32_t Reserved[2];           /*!< Reserved                                      */
 } USB_OTG_HostChannelTypeDef;
 
+
+
 /**
   * @}
   */
