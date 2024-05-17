@@ -45,7 +45,7 @@
 void SystemClockSetup(void);
 void SysTickSetup(void);
 void BlueLEDSetup(void);
-void lcd_flush_cb(lv_display_t * disp, const lv_area_t * area, lv_color_t * color_p);
+void lcd_flush_cb(lv_display_t * disp, const lv_area_t * area, uint8_t * cp);
 
 
 static void SetSystemClockTo16Mhz(void);
@@ -118,7 +118,7 @@ int main(void)
 	lv_display_set_buffers(disp, bsp_lcd_get_draw_buffer1_addr(), bsp_lcd_get_draw_buffer2_addr(), (10UL * 1024UL), LV_DISPLAY_RENDER_MODE_PARTIAL);
 
 	// change the active screens background color
-	lv_obj_set_style_bg_color(lv_screen_active(), lv_color_hex(0xff505f), LV_PART_MAIN);
+	lv_obj_set_style_bg_color(lv_screen_active(), lv_color_hex(0x003a57), LV_PART_MAIN);
 	lv_obj_set_style_text_color(lv_screen_active(), lv_color_hex(0xffffff), LV_PART_MAIN);
 
 
@@ -146,7 +146,7 @@ int main(void)
 /*
  * Callback used by LVGL to render to the Screen
  */
-void lcd_flush_cb(lv_display_t * disp, const lv_area_t * area, lv_color_t * cp){
+void lcd_flush_cb(lv_display_t * disp, const lv_area_t * area, uint8_t * cp){
 
 	//set the drawing region
 	bsp_lcd_set_display_area(area->x1, area->y1, area->x2, area->y2);
@@ -155,8 +155,8 @@ void lcd_flush_cb(lv_display_t * disp, const lv_area_t * area, lv_color_t * cp){
 	int width = area->x2 - area->x1 + 1;
 
 	for (int i = 0; i < width * height; i++) {
-		uint32_t color_full = (cp->red << 11) | (cp->green << 5) | (cp->blue);
-		bsp_lcd_set_background_color((uint32_t) color_full);
+		//uint32_t color_full = (cp->red << 11) | (cp->green << 5) | (cp->blue);
+		bsp_lcd_set_background_color((uint32_t)cp);
 		cp++;
 	}
 
