@@ -22,6 +22,8 @@
 #include "reg_util.h"
 #include "bsp_lcd.h"
 #include "cmsis_gcc.h"
+#include "../lvgl/lvgl.h"
+#include "../lv_conf.h"
 
 #define RGB888(r,g,b)  (((r) << 16) | ((g) << 8) | (b))
 
@@ -180,12 +182,30 @@ int main(void)
 
 	__enable_irq();
 	BlueLEDSetup();
-	delay_50ms();
 	SysTickSetup();
+	delay_50ms();
+	delay_50ms();
 
 
-    /* Loop forever */
-	for(;;);
+	/* We have a screen above and we can baremetal control it
+	 * Onwards now we will use LVGL to talk to the screen so lets
+	 * set that up and see how it works
+	 * */
+
+	//Init LVGL
+	lv_init();
+
+
+	/*End LVGL*/
+
+
+
+    /* Application Super loop */
+	while(1){
+		//let lvgl handle any tasks it needs
+		delay_50ms();
+		lv_timer_handler();
+	}
 }
 
 
@@ -207,7 +227,7 @@ void BlueLEDSetup(void){
 }
 
 void SysTickSetup(void){
-	uint32_t ticks = 1600000 - 1;
+	uint32_t ticks = 16000000 - 1;
 
 	SysTick->LOAD = (uint32_t) ticks;
 	NVIC_SetPriority (SysTick_IRQn, (1UL << __NVIC_PRIO_BITS) - 1UL);
@@ -220,8 +240,7 @@ void SysTickSetup(void){
 }
 
 void SysTick_Handler(void) {
-
-	//flip our LED
+	//flip our LED/ Data signal
 	tick_led_on = !tick_led_on;
 
 	if (tick_led_on) {
@@ -229,6 +248,9 @@ void SysTick_Handler(void) {
 	} else {
 		GPIOD->BSRR |= GPIO_BSRR_BR_15;
 	}
+
+	// report elapsed time to lvgl
+	lv_tick_inc(1000);
 
 
 }
