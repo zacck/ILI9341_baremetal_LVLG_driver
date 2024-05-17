@@ -45,6 +45,7 @@
 void SystemClockSetup(void);
 void SysTickSetup(void);
 void BlueLEDSetup(void);
+void lcd_flush_cb(lv_display_t * disp, const lv_area_t * area, lv_color_t * color_p);
 
 
 static void SetSystemClockTo16Mhz(void);
@@ -104,17 +105,27 @@ int main(void)
 	/* We have a screen above and we can baremetal control it
 	 * Onwards now we will use LVGL to talk to the screen so lets
 	 * set that up and see how it works
-	 * */
+	 */
 
 	//Init LVGL
 	lv_init();
 
+	//Init LVGL with our screen size
 	lv_display_t * disp = lv_display_create(BSP_LCD_ACTIVE_WIDTH, BSP_LCD_ACTIVE_HEIGHT);
+	//Set a flush callback so lvgl can draw to our screen
+	lv_display_set_flush_cb(disp, lcd_flush_cb);
+	//Initialize and set a buffer
+	lv_display_set_buffers(disp, bsp_lcd_get_draw_buffer1_addr(), bsp_lcd_get_draw_buffer2_addr(), (10UL * 1024UL), LV_DISPLAY_RENDER_MODE_PARTIAL);
+
+	// change the active screens background color
+	lv_obj_set_style_bg_color(lv_screen_active(), lv_color_hex(0xff505f), LV_PART_MAIN);
+	lv_obj_set_style_text_color(lv_screen_active(), lv_color_hex(0xffffff), LV_PART_MAIN);
 
 
-	// TO remove any warnings
-	(void)disp;
-
+	// lets make a spinner
+	lv_obj_t * spinner = lv_spinner_create(lv_screen_active());
+	lv_obj_set_size(spinner, 64, 64);
+	lv_obj_align(spinner, LV_ALIGN_BOTTOM_MID, 0, 0);
 
 
 
@@ -124,12 +135,34 @@ int main(void)
 
     /* Application Super loop */
 	while(1){
+
+		lv_timer_handler();
 		//let lvgl handle any tasks it needs
 		delay_50ms();
-		lv_timer_handler();
 	}
 }
 
+
+/*
+ * Callback used by LVGL to render to the Screen
+ */
+void lcd_flush_cb(lv_display_t * disp, const lv_area_t * area, lv_color_t * cp){
+
+	//set the drawing region
+	bsp_lcd_set_display_area(area->x1, area->y1, area->x2, area->y2);
+
+	int height = area->y2 - area->y1 + 1;
+	int width = area->x2 - area->x1 + 1;
+
+	for (int i = 0; i < width * height; i++) {
+		uint32_t color_full = (cp->red << 11) | (cp->green << 5) | (cp->blue);
+		bsp_lcd_set_background_color((uint32_t) color_full);
+		cp++;
+	}
+
+	//Tell LVGL we are ready to flush
+	lv_display_flush_ready(disp);
+}
 
 
 
@@ -172,7 +205,7 @@ void SysTick_Handler(void) {
 	}
 
 	// report elapsed time to lvgl
-	lv_tick_inc(1000);
+	lv_tick_inc(1);
 
 
 }
