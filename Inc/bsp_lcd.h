@@ -87,6 +87,7 @@
 void bsp_lcd_init();
 void bsp_lcd_set_orientation(int orientation);
 void bsp_lcd_write(uint8_t *buffer, uint32_t nbytes);
+void bsp_lcd_flush(void);
 void bsp_lcd_set_background_color(uint32_t rgb888);
 void bsp_lcd_fill_rect(uint32_t rgb888, uint32_t x_start, uint32_t x_width,uint32_t y_start,uint32_t y_height);
 void bsp_lcd_write_dma(uint32_t src_addr, uint32_t nbytes);

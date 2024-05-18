@@ -228,7 +228,9 @@ void bsp_lcd_fill_rect(uint32_t rgb888, uint32_t x_start, uint32_t x_width,uint3
 	}
 
 
-
+void bsp_lcd_flush(void){
+	lcd_flush(hlcd);
+}
 
  void lcd_pin_init(void)
 {

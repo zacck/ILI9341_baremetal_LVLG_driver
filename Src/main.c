@@ -63,8 +63,7 @@ int main(void)
 	bsp_lcd_init();
 	bsp_lcd_set_orientation(LANDSCAPE);
 	bsp_lcd_set_background_color(WHITE);
-	delay_50ms();
-	delay_50ms();
+
 	bsp_lcd_fill_rect(VIOLET, 0, 320, 0, 34);
 	bsp_lcd_fill_rect(INDIGO, 0, 320, (34 *1), 34);
 	bsp_lcd_fill_rect(BLUE, 0, 320, (34*2), 34);
@@ -72,13 +71,11 @@ int main(void)
 	bsp_lcd_fill_rect(YELLOW, 0, 320, (34*4), 34);
 	bsp_lcd_fill_rect(ORANGE, 0, 320, (34*5), 34);
 	bsp_lcd_fill_rect(RED, 0, 320, (34*6), 34);
-	delay_50ms();
-	delay_50ms();
+
 	//ADD windowinng
 	bsp_lcd_set_background_color(YELLOW);
 	bsp_lcd_fill_rect(RED, 60, 200, 40, 160);
-	delay_50ms();
-	delay_50ms();
+
 
 	// ADD smart windowing
 	bsp_lcd_set_background_color(YELLOW);
@@ -90,15 +87,13 @@ int main(void)
 		data[i] = bsp_lcd_convert_rgb888_to_rgb565(RED);
 	}
 	bsp_lcd_write((uint8_t*)data, (200UL * 40UL));
-	delay_50ms();
-	delay_50ms();
+
 
 	bsp_lcd_set_background_color(BLACK);
 
 	__enable_irq();
 	BlueLEDSetup();
 	SysTickSetup();
-	delay_50ms();
 	delay_50ms();
 
 
@@ -112,10 +107,15 @@ int main(void)
 
 	//Init LVGL with our screen size
 	lv_display_t * disp = lv_display_create(BSP_LCD_ACTIVE_WIDTH, BSP_LCD_ACTIVE_HEIGHT);
+
+	static uint8_t buf1[320 * 24 * 2];
+	static uint8_t buf2[320 * 24 * 2];
+
+	//Initialize and set a buffer
+	lv_display_set_buffers(disp, buf1, buf2, (320 * 24 * 2), LV_DISPLAY_RENDER_MODE_PARTIAL);
+
 	//Set a flush callback so lvgl can draw to our screen
 	lv_display_set_flush_cb(disp, lcd_flush_cb);
-	//Initialize and set a buffer
-	lv_display_set_buffers(disp, bsp_lcd_get_draw_buffer1_addr(), bsp_lcd_get_draw_buffer2_addr(), (10UL * 1024UL), LV_DISPLAY_RENDER_MODE_PARTIAL);
 
 	// change the active screens background color
 	lv_obj_set_style_bg_color(lv_screen_active(), lv_color_hex(0x003a57), LV_PART_MAIN);
@@ -154,13 +154,15 @@ void lcd_flush_cb(lv_display_t * disp, const lv_area_t * area, uint8_t * cp){
 	int height = area->y2 - area->y1 + 1;
 	int width = area->x2 - area->x1 + 1;
 
+
 	for (int i = 0; i < width * height; i++) {
-		//uint32_t color_full = (cp->red << 11) | (cp->green << 5) | (cp->blue);
-		bsp_lcd_set_background_color((uint32_t)cp);
+
+		bsp_lcd_write(cp, 2);
 		cp++;
 	}
 
 	//Tell LVGL we are ready to flush
+	bsp_lcd_flush();
 	lv_display_flush_ready(disp);
 }
 
