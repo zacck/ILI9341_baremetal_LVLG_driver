@@ -45,8 +45,6 @@
 void SystemClockSetup(void);
 void SysTickSetup(void);
 void BlueLEDSetup(void);
-void lcd_flush_cb(lv_display_t * disp, const lv_area_t * area, uint8_t * cp);
-
 
 static void SetSystemClockTo16Mhz(void);
 
@@ -56,10 +54,26 @@ static void delay_50ms(void){
 
 static volatile bool tick_led_on = 0;
 
+/*Screen  Defines*/
+#define TFT_HOR_RES 240
+#define TFT_VER_RES 320
+
+#define TFT_EXT_FB		0		/*Frame buffer is located into an external SDRAM*/
+#define TFT_USE_GPU		0		/*Enable hardware accelerator*/
+
+void screen_init(void);
+void lcd_flush_cb(lv_display_t * disp, const lv_area_t * area, uint8_t * px_map);
+
+static volatile uint32_t t_saved = 0;
+/*End Screen Defines*/
+
+
+
+
 int main(void)
 {
-	//SystemClockSetup();
-	SetSystemClockTo16Mhz();
+	SystemClockSetup();
+	//SetSystemClockTo16Mhz();
 	bsp_lcd_init();
 	bsp_lcd_set_orientation(LANDSCAPE);
 	bsp_lcd_set_background_color(WHITE);
@@ -91,10 +105,12 @@ int main(void)
 
 	bsp_lcd_set_background_color(BLACK);
 
+
 	__enable_irq();
 	BlueLEDSetup();
 	SysTickSetup();
-	delay_50ms();
+
+
 
 
 	/* We have a screen above and we can baremetal control it
@@ -102,30 +118,33 @@ int main(void)
 	 * set that up and see how it works
 	 */
 
-	//Init LVGL
-	lv_init();
+	screen_init();
 
-	//Init LVGL with our screen size
-	lv_display_t * disp = lv_display_create(BSP_LCD_ACTIVE_WIDTH, BSP_LCD_ACTIVE_HEIGHT);
 
-	static uint8_t buf1[320 * 24 * 2];
-	static uint8_t buf2[320 * 24 * 2];
 
-	//Initialize and set a buffer
-	lv_display_set_buffers(disp, buf1, buf2, (320 * 24 * 2), LV_DISPLAY_RENDER_MODE_PARTIAL);
-
-	//Set a flush callback so lvgl can draw to our screen
-	lv_display_set_flush_cb(disp, lcd_flush_cb);
 
 	// change the active screens background color
 	lv_obj_set_style_bg_color(lv_screen_active(), lv_color_hex(0x003a57), LV_PART_MAIN);
 	lv_obj_set_style_text_color(lv_screen_active(), lv_color_hex(0xffffff), LV_PART_MAIN);
 
 
+
+	lv_obj_t *mbox1 = lv_msgbox_create(NULL);
+
+	lv_msgbox_add_title(mbox1, "Hello");
+
+	lv_msgbox_add_text(mbox1, "This is a message box with two buttons.");
+	lv_msgbox_add_close_button(mbox1);
+
+	lv_obj_t *btn;
+	btn = lv_msgbox_add_footer_button(mbox1, "Apply");
+	btn = lv_msgbox_add_footer_button(mbox1, "Cancel");
+
+
 	// lets make a spinner
-	lv_obj_t * spinner = lv_spinner_create(lv_screen_active());
-	lv_obj_set_size(spinner, 64, 64);
-	lv_obj_align(spinner, LV_ALIGN_BOTTOM_MID, 0, 0);
+//	lv_obj_t * spinner = lv_spinner_create(lv_screen_active());
+//	lv_obj_set_size(spinner, 64, 64);
+//	lv_obj_align(spinner, LV_ALIGN_BOTTOM_MID, 0, 0);
 
 
 
@@ -143,26 +162,84 @@ int main(void)
 }
 
 
+
+/*Function to initialize the screen as a LVGL element*/
+void screen_init(void){
+	lv_color_t *draw_buf1;
+	lv_color_t *draw_buf2;
+
+	bsp_lcd_init();
+
+	draw_buf1 = (lv_color_t*)bsp_lcd_get_draw_buffer1_addr();
+	draw_buf2 = (lv_color_t*)bsp_lcd_get_draw_buffer2_addr();
+
+	//Init LVGL
+	lv_init();
+
+	//Init LVGL with our screen size
+	lv_display_t * disp = lv_display_create(BSP_LCD_ACTIVE_HEIGHT, BSP_LCD_ACTIVE_WIDTH);
+
+	//Initialize and set a buffer
+	lv_display_set_buffers(disp, draw_buf1, draw_buf2, ((10UL * 1024UL) / 2), LV_DISPLAY_RENDER_MODE_PARTIAL);
+
+	//Set a flush callback so lvgl can draw to our screen
+	lv_display_set_flush_cb(disp, lcd_flush_cb);
+
+	lv_display_set_rotation(disp, LV_DISPLAY_ROTATION_90);
+
+	lv_display_set_color_format(disp, LV_COLOR_FORMAT_RGB565);
+
+
+
+}
+
+
 /*
  * Callback used by LVGL to render to the Screen
  */
-void lcd_flush_cb(lv_display_t * disp, const lv_area_t * area, uint8_t * cp){
+void lcd_flush_cb(lv_display_t * disp, const lv_area_t * area, uint8_t * px_map){
 
-	//set the drawing region
-	bsp_lcd_set_display_area(area->x1, area->y1, area->x2, area->y2);
+	uint16_t * color_p = (uint16_t *)px_map;
 
-	int height = area->y2 - area->y1 + 1;
-	int width = area->x2 - area->x1 + 1;
-
-
-	for (int i = 0; i < width * height; i++) {
-
-		bsp_lcd_write(cp, 2);
-		cp++;
+	if(area->x2 < 0 || area->y2 < 0 || area->x1 > (TFT_HOR_RES - 1) || area->y1 > (TFT_VER_RES - 1)) {
+		lv_display_flush_ready(disp);
+		return;
 	}
 
+	/*Return if the area is out the screen*/
+	if (area->x2 < 0)
+		return;
+	if (area->y2 < 0)
+		return;
+	if (area->x1 > TFT_HOR_RES - 1)
+		return;
+	if (area->y1 > TFT_VER_RES - 1)
+		return;
+
+	/*Truncate the area to the screen*/
+	int32_t act_x1 = area->x1 < 0 ? 0 : area->x1;
+	int32_t act_y1 = area->y1 < 0 ? 0 : area->y1;
+	int32_t act_x2 = area->x2 > TFT_HOR_RES - 1 ? TFT_HOR_RES - 1 : area->x2;
+	int32_t act_y2 = area->y2 > TFT_VER_RES - 1 ? TFT_VER_RES - 1 : area->y2;
+
+    lv_coord_t w = (area->x2 - area->x1) + 1;
+
+
+	//set the drawing region
+    bsp_lcd_set_display_area(act_x1,act_x2,act_y1,act_y2);
+    uint32_t len = (act_x2 - act_x1 + 1) * 2ul;
+
+	bsp_lcd_send_cmd_mem_write();
+	for(uint32_t y = act_y1; y <= act_y2; y++){
+		bsp_lcd_write((uint8_t*)color_p, len);
+
+		color_p += w;
+	}
+
+	delay_50ms();
+
 	//Tell LVGL we are ready to flush
-	bsp_lcd_flush();
+	//bsp_lcd_flush();
 	lv_display_flush_ready(disp);
 }
 
@@ -184,7 +261,7 @@ void BlueLEDSetup(void){
 }
 
 void SysTickSetup(void){
-	uint32_t ticks = 16000000 - 1;
+	uint32_t ticks = 168000 - 1;
 
 	SysTick->LOAD = (uint32_t) ticks;
 	NVIC_SetPriority (SysTick_IRQn, (1UL << __NVIC_PRIO_BITS) - 1UL);
@@ -197,14 +274,14 @@ void SysTickSetup(void){
 }
 
 void SysTick_Handler(void) {
-	//flip our LED/ Data signal
+	/*flip our LED/ Data signal In case we need an indicator
 	tick_led_on = !tick_led_on;
 
 	if (tick_led_on) {
 		GPIOD->BSRR |= GPIO_BSRR_BS_15;
 	} else {
 		GPIOD->BSRR |= GPIO_BSRR_BR_15;
-	}
+	}*/
 
 	// report elapsed time to lvgl
 	lv_tick_inc(1);
