@@ -36,9 +36,9 @@
 
 
 /*Select orientation*/
-#define PORTRAIT  0
-#define LANDSCAPE 1
-#define BSP_LCD_ORIENTATION   LANDSCAPE
+#define PORTRAIT  1
+#define LANDSCAPE 0
+#define BSP_LCD_ORIENTATION   PORTRAIT
 
 #if(BSP_LCD_ORIENTATION == PORTRAIT)
 	#define  BSP_LCD_ACTIVE_WIDTH 			BSP_LCD_WIDTH

@@ -110,6 +110,18 @@ int main(void)
 	BlueLEDSetup();
 	SysTickSetup();
 
+	delay_50ms();
+	delay_50ms();
+	delay_50ms();
+	delay_50ms();
+	delay_50ms();
+	delay_50ms();
+	delay_50ms();
+	delay_50ms();
+	delay_50ms();
+	delay_50ms();
+	delay_50ms();
+	delay_50ms();
 
 
 
@@ -141,10 +153,11 @@ int main(void)
 	btn = lv_msgbox_add_footer_button(mbox1, "Cancel");
 
 
+
 	// lets make a spinner
-//	lv_obj_t * spinner = lv_spinner_create(lv_screen_active());
-//	lv_obj_set_size(spinner, 64, 64);
-//	lv_obj_align(spinner, LV_ALIGN_BOTTOM_MID, 0, 0);
+	lv_obj_t * spinner = lv_spinner_create(lv_screen_active());
+	lv_obj_set_size(spinner, 64, 64);
+	lv_obj_align(spinner, LV_ALIGN_BOTTOM_MID, 0, 0);
 
 
 
@@ -188,6 +201,8 @@ void screen_init(void){
 	lv_display_set_rotation(disp, LV_DISPLAY_ROTATION_90);
 
 	lv_display_set_color_format(disp, LV_COLOR_FORMAT_RGB565);
+
+
 
 
 
